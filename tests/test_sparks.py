@@ -260,6 +260,10 @@ def test_what_a_worker_can_render_decides_what_it_is_given():
     assert "flux3k-full is not installed" in sparks.capable("studio", {"image_model": "flux3k-full"}, {"image": True, "fasth3": True, "image_models": ["qwen", "flux3k-fast"]})
     assert sparks.capable("scout", {"image_model": "flux3k-fast"}, {"image": True, "image_models": ["qwen", "flux3k-fast"]}) == ""
     assert sparks.capable("scout", {"image_model": "qwen"}, {"image": True}) == ""
+    # a new picture with a picture LoRA goes only where that worker's own hub has the file, and never to a Mac
+    face = {"loras": [{"id": "face", "strength": 1}]}
+    assert "LoRA face" in sparks.capable("scout", face, {"image": True}) and sparks.capable("scout", face, {"image": True, "loras": ["face"]}) == ""
+    assert "does not merge picture LoRAs" in sparks.capable("scout", face, {"image": True, "loras": ["face"], "platform": "mac"})
     assert "image model" in sparks.capable("studio", {}, plain) and "FastH3" in sparks.capable("studio", {}, {"image": True})
     assert sparks.capable("studio", {}, {**plain, "image": True}) == ""
     # what stays on this Spark whatever the number, and why

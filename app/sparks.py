@@ -257,7 +257,12 @@ def capable(kind: str, params: dict, info: dict | None) -> str:
         # a worker on 2.7 says nothing of its picture models: it has Qwen only
         return f"the picture model {model} is not installed there"
     if kind == "scout":
-        return ""
+        # a picture LoRA is merged where the file is: that worker's own hub must have it, and a Mac does not merge one into a new picture
+        picked = [str(one.get("id")) for one in params.get("loras") or [] if isinstance(one, dict)]
+        if picked and platform_of(info) == "mac":
+            return "a Mac does not merge picture LoRAs into a new picture (use Edit a picture, or a Spark)"
+        missing = [one for one in picked if one not in (info.get("loras") or [])]
+        return "the LoRA " + ", ".join(missing) + " is not installed there" if missing else ""
     if not info.get("fasth3"):
         return "FastH3 is not installed there"
     media = bool(params.get("reference_videos") or params.get("reference_audios"))
